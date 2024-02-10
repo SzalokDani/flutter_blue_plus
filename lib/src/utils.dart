@@ -68,8 +68,7 @@ extension AddOrUpdate<T> on List<T> {
 extension FutureTimeout<T> on Future<T> {
   Future<T> fbpTimeout(int seconds, String function) {
     return this.timeout(Duration(seconds: seconds), onTimeout: () {
-      throw FlutterBluePlusException(
-          ErrorPlatform.fbp, function, FbpErrorCode.timeout.index, "Timed out after ${seconds}s");
+      throw FlutterBluePlusException(ErrorPlatform.fbp, function, FbpErrorCode.timeout.index, "Timed out after ${seconds}s");
     });
   }
 
@@ -81,8 +80,7 @@ extension FutureTimeout<T> on Future<T> {
     var subscription = device.connectionState.listen((event) {
       if (event == BluetoothConnectionState.disconnected) {
         if (!completer.isCompleted) {
-          completer.completeError(FlutterBluePlusException(
-              ErrorPlatform.fbp, function, FbpErrorCode.deviceIsDisconnected.index, "Device is disconnected"));
+          completer.completeError(FlutterBluePlusException(ErrorPlatform.fbp, function, FbpErrorCode.deviceIsDisconnected.index, "Device is disconnected"));
         }
       }
     });
@@ -112,8 +110,7 @@ extension FutureTimeout<T> on Future<T> {
     var subscription = FlutterBluePlus.adapterState.listen((event) {
       if (event == BluetoothAdapterState.off || event == BluetoothAdapterState.turningOff) {
         if (!completer.isCompleted) {
-          completer.completeError(FlutterBluePlusException(
-              ErrorPlatform.fbp, function, FbpErrorCode.adapterIsOff.index, "Bluetooth adapter is off"));
+          completer.completeError(FlutterBluePlusException(ErrorPlatform.fbp, function, FbpErrorCode.adapterIsOff.index, "Bluetooth adapter is off"));
         }
       }
     });
@@ -250,10 +247,9 @@ class _NewStreamWithInitialValueTransformer<T> extends StreamTransformerBase<T, 
   }
 
   Stream<T> _bind(Stream<T> stream, {bool broadcast = false}) {
-
     /////////////////////////////////////////
     /// Original Stream Subscription Callbacks
-    /// 
+    ///
 
     /// When the original stream emits data, forward it to our new stream
     void onData(T data) {
@@ -291,22 +287,22 @@ class _NewStreamWithInitialValueTransformer<T> extends StreamTransformerBase<T, 
 
     //////////////////////////////////////
     ///  New Stream Controller Callbacks
-    /// 
+    ///
 
     /// (Single Subscription Only) When a client pauses
-    /// the new stream, pause the original stream 
+    /// the new stream, pause the original stream
     void onPause() {
       subscription.pause();
     }
 
     /// (Single Subscription Only) When a client resumes
-    /// the new stream, resume the original stream 
+    /// the new stream, resume the original stream
     void onResume() {
       subscription.resume();
     }
 
-    /// Called when a client cancels their 
-    /// subscription to the new stream, 
+    /// Called when a client cancels their
+    /// subscription to the new stream,
     void onCancel() {
       // count listeners of the new stream
       listenerCount--;
@@ -322,7 +318,7 @@ class _NewStreamWithInitialValueTransformer<T> extends StreamTransformerBase<T, 
 
     //////////////////////////////////////
     /// Return New Stream
-    /// 
+    ///
 
     // create a new stream controller
     if (broadcast) {
@@ -401,6 +397,8 @@ class _Mutex {
     while (mine != execute) {
       await _controller.stream.first; // wait
     }
+    await Future.delayed(Duration(milliseconds: 100));
+
     return true;
   }
 
