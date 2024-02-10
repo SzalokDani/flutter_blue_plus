@@ -401,6 +401,8 @@ class _Mutex {
     while (mine != execute) {
       await _controller.stream.first; // wait
     }
+    await Future.delayed(Duration(milliseconds: 100));
+    
     return true;
   }
 
