@@ -64,8 +64,7 @@ class FlutterBluePlus {
   static Future<bool> get isSupported async => await _invokeMethod('isSupported');
 
   /// The current adapter state
-  static BluetoothAdapterState get adapterStateNow =>
-      _adapterStateNow != null ? _bmToAdapterState(_adapterStateNow!) : BluetoothAdapterState.unknown;
+  static BluetoothAdapterState get adapterStateNow => _adapterStateNow != null ? _bmToAdapterState(_adapterStateNow!) : BluetoothAdapterState.unknown;
 
   /// Return the friendly Bluetooth name of the local Bluetooth adapter
   static Future<String> get adapterName async => await _invokeMethod('getAdapterName');
@@ -101,10 +100,7 @@ class FlutterBluePlus {
 
   /// Turn on Bluetooth (Android only),
   static Future<void> turnOn({int timeout = 60}) async {
-    var responseStream = FlutterBluePlus._methodStream.stream
-        .where((m) => m.method == "OnTurnOnResponse")
-        .map((m) => m.arguments)
-        .map((args) => BmTurnOnResponse.fromMap(args));
+    var responseStream = FlutterBluePlus._methodStream.stream.where((m) => m.method == "OnTurnOnResponse").map((m) => m.arguments).map((args) => BmTurnOnResponse.fromMap(args));
 
     // Start listening now, before invokeMethod, to ensure we don't miss the response
     Future<BmTurnOnResponse> futureResponse = responseStream.first;
@@ -222,20 +218,15 @@ class FlutterBluePlus {
     assert(continuousDivisor >= 1, "divisor must be >= 1");
 
     // check filters
-    bool hasOtherFilter = withServices.isNotEmpty ||
-        withRemoteIds.isNotEmpty ||
-        withNames.isNotEmpty ||
-        withMsd.isNotEmpty ||
-        withServiceData.isNotEmpty;
+    bool hasOtherFilter = withServices.isNotEmpty || withRemoteIds.isNotEmpty || withNames.isNotEmpty || withMsd.isNotEmpty || withServiceData.isNotEmpty;
 
     // Note: `withKeywords` is not compatible with other filters on android
     // because it is implemented in custom fbp code, not android code
-    assert(!(Platform.isAndroid && withKeywords.isNotEmpty && hasOtherFilter),
-        "withKeywords is not compatible with other filters on Android");
+    assert(!(Platform.isAndroid && withKeywords.isNotEmpty && hasOtherFilter), "withKeywords is not compatible with other filters on Android");
 
     // only allow a single task to call
     // startScan or stopScan at a time
-    _Mutex mtx = _MutexFactory.getMutexForKey("scan");
+    _Mutex mtx = await _MutexFactory.getMutexForKey("scan");
     await mtx.take();
     try {
       // already scanning?
@@ -259,10 +250,7 @@ class FlutterBluePlus {
           androidScanMode: androidScanMode.value,
           androidUsesFineLocation: androidUsesFineLocation);
 
-      Stream<BmScanResponse> responseStream = FlutterBluePlus._methodStream.stream
-          .where((m) => m.method == "OnScanResponse")
-          .map((m) => m.arguments)
-          .map((args) => BmScanResponse.fromMap(args));
+      Stream<BmScanResponse> responseStream = FlutterBluePlus._methodStream.stream.where((m) => m.method == "OnScanResponse").map((m) => m.arguments).map((args) => BmScanResponse.fromMap(args));
 
       // Start listening now, before invokeMethod, so we do not miss any results
       _scanBuffer = _BufferStream.listen(responseStream);
@@ -271,9 +259,7 @@ class FlutterBluePlus {
       await _invokeMethod('startScan', settings.toMap()).onError((e, s) => _stopScan(invokePlatform: false));
 
       // check every 250ms for gone devices?
-      late Stream<BmScanResponse?> outputStream = removeIfGone != null
-          ? _mergeStreams([_scanBuffer!.stream, Stream.periodic(Duration(milliseconds: 250))])
-          : _scanBuffer!.stream;
+      late Stream<BmScanResponse?> outputStream = removeIfGone != null ? _mergeStreams([_scanBuffer!.stream, Stream.periodic(Duration(milliseconds: 250))]) : _scanBuffer!.stream;
 
       // start by pushing an empty array
       _scanResults.add([]);
@@ -338,7 +324,7 @@ class FlutterBluePlus {
 
   /// Stops a scan for Bluetooth Low Energy devices
   static Future<void> stopScan() async {
-    _Mutex mtx = _MutexFactory.getMutexForKey("scan");
+    _Mutex mtx = await _MutexFactory.getMutexForKey("scan");
     await mtx.take();
     await _stopScan();
     mtx.give();
@@ -377,8 +363,7 @@ class FlutterBluePlus {
   static Future<PhySupport> getPhySupport() async {
     // check android
     if (Platform.isAndroid == false) {
-      throw FlutterBluePlusException(
-          ErrorPlatform.fbp, "getPhySupport", FbpErrorCode.androidOnly.index, "android-only");
+      throw FlutterBluePlusException(ErrorPlatform.fbp, "getPhySupport", FbpErrorCode.androidOnly.index, "android-only");
     }
 
     return await _invokeMethod('getPhySupport').then((args) => PhySupport.fromMap(args));
@@ -438,15 +423,15 @@ class FlutterBluePlus {
       _connectionStates[r.remoteId] = r;
       if (r.connectionState == BmConnectionStateEnum.disconnected) {
         // reset known mtu
-        _mtuValues.remove(r.remoteId); 
+        _mtuValues.remove(r.remoteId);
 
         // clear lastDescs so that 'isNotifying' is reset
-        _lastDescs.remove(r.remoteId); 
+        _lastDescs.remove(r.remoteId);
 
         // clear chr values, for api consistency
-        _lastChrs.remove(r.remoteId); 
+        _lastChrs.remove(r.remoteId);
 
-        // Note: to make FBP easier to use, we purposely 
+        // Note: to make FBP easier to use, we purposely
         // do not clear `knownServices` or `bondState`.
         // to make FBP easier to use, we purposely do not clear knownServices,
         // otherwise `servicesList` would be annoying to use.
@@ -714,8 +699,7 @@ class ScanResult {
         timeStamp = DateTime.now();
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is ScanResult && runtimeType == other.runtimeType && device == other.device;
+  bool operator ==(Object other) => identical(this, other) || other is ScanResult && runtimeType == other.runtimeType && device == other.device;
 
   @override
   int get hashCode => device.hashCode;

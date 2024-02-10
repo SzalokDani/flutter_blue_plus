@@ -96,12 +96,11 @@ class BluetoothCharacteristic {
   Future<List<int>> read({int timeout = 15}) async {
     // check connected
     if (device.isDisconnected) {
-      throw FlutterBluePlusException(
-          ErrorPlatform.fbp, "readCharacteristic", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
+      throw FlutterBluePlusException(ErrorPlatform.fbp, "readCharacteristic", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
     }
 
     // Only allow a single ble operation to be underway at a time
-    _Mutex mtx = _MutexFactory.getMutexForKey("global");
+    _Mutex mtx = await _MutexFactory.getMutexForKey("global");
     await mtx.take();
 
     // return value
@@ -130,10 +129,8 @@ class BluetoothCharacteristic {
       await FlutterBluePlus._invokeMethod('readCharacteristic', request.toMap());
 
       // wait for response
-      BmCharacteristicData response = await futureResponse
-          .fbpEnsureAdapterIsOn("readCharacteristic")
-          .fbpEnsureDeviceIsConnected(device, "readCharacteristic")
-          .fbpTimeout(timeout, "readCharacteristic");
+      BmCharacteristicData response =
+          await futureResponse.fbpEnsureAdapterIsOn("readCharacteristic").fbpEnsureDeviceIsConnected(device, "readCharacteristic").fbpTimeout(timeout, "readCharacteristic");
 
       // failed?
       if (!response.success) {
@@ -158,8 +155,7 @@ class BluetoothCharacteristic {
   ///         2. the peripheral device must support the 'long write' ble protocol.
   ///         3. Interrupted transfers can leave the characteristic in a partially written state
   ///         4. If the mtu is small, it is very very slow.
-  Future<void> write(List<int> value,
-      {bool withoutResponse = false, bool allowLongWrite = false, int timeout = 15}) async {
+  Future<void> write(List<int> value, {bool withoutResponse = false, bool allowLongWrite = false, int timeout = 15}) async {
     //  check args
     if (withoutResponse && allowLongWrite) {
       throw ArgumentError("cannot longWrite withoutResponse, not allowed on iOS or Android");
@@ -167,12 +163,11 @@ class BluetoothCharacteristic {
 
     // check connected
     if (device.isDisconnected) {
-      throw FlutterBluePlusException(
-          ErrorPlatform.fbp, "writeCharacteristic", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
+      throw FlutterBluePlusException(ErrorPlatform.fbp, "writeCharacteristic", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
     }
 
     // Only allow a single ble operation to be underway at a time
-    _Mutex mtx = _MutexFactory.getMutexForKey("global");
+    _Mutex mtx = await _MutexFactory.getMutexForKey("global");
     await mtx.take();
 
     try {
@@ -205,10 +200,8 @@ class BluetoothCharacteristic {
       // wait for response so that we can:
       //  1. check for success (writeWithResponse)
       //  2. wait until the packet has been sent, to prevent iOS & Android dropping packets (writeWithoutResponse)
-      BmCharacteristicData response = await futureResponse
-          .fbpEnsureAdapterIsOn("writeCharacteristic")
-          .fbpEnsureDeviceIsConnected(device, "writeCharacteristic")
-          .fbpTimeout(timeout, "writeCharacteristic");
+      BmCharacteristicData response =
+          await futureResponse.fbpEnsureAdapterIsOn("writeCharacteristic").fbpEnsureDeviceIsConnected(device, "writeCharacteristic").fbpTimeout(timeout, "writeCharacteristic");
 
       // failed?
       if (!response.success) {
@@ -228,8 +221,7 @@ class BluetoothCharacteristic {
   Future<bool> setNotifyValue(bool notify, {int timeout = 15, bool forceIndications = false}) async {
     // check connected
     if (device.isDisconnected) {
-      throw FlutterBluePlusException(
-          ErrorPlatform.fbp, "setNotifyValue", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
+      throw FlutterBluePlusException(ErrorPlatform.fbp, "setNotifyValue", FbpErrorCode.deviceIsDisconnected.index, "device is not connected");
     }
 
     // check
@@ -238,7 +230,7 @@ class BluetoothCharacteristic {
     }
 
     // Only allow a single ble operation to be underway at a time
-    _Mutex mtx = _MutexFactory.getMutexForKey("global");
+    _Mutex mtx = await _MutexFactory.getMutexForKey("global");
     await mtx.take();
 
     try {
@@ -270,10 +262,7 @@ class BluetoothCharacteristic {
 
       // wait for CCCD descriptor to be written?
       if (hasCCCD) {
-        BmDescriptorData response = await futureResponse
-            .fbpEnsureAdapterIsOn("setNotifyValue")
-            .fbpEnsureDeviceIsConnected(device, "setNotifyValue")
-            .fbpTimeout(timeout, "setNotifyValue");
+        BmDescriptorData response = await futureResponse.fbpEnsureAdapterIsOn("setNotifyValue").fbpEnsureDeviceIsConnected(device, "setNotifyValue").fbpTimeout(timeout, "setNotifyValue");
 
         // failed?
         if (!response.success) {
